@@ -9,6 +9,7 @@ import (
 	"l0/internal/models"
 	"l0/internal/repository"
 	"log"
+	"sync"
 )
 
 type Worker struct {
@@ -23,34 +24,42 @@ func New(cashe memory.Memory, repo repository.Repository) *Worker {
 	}
 }
 
-type worker interface {
-	Write(data json.RawMessage, id string) error
-	Read(id string) (json.RawMessage, error)
-	InsertData(ctx context.Context, data json.RawMessage, id string) error
-}
+func (w *Worker) Start(ctx context.Context, natsStream stan.Conn) {
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		select {
+		case <-ctx.Done():
+			log.Println(ctx.Err())
+			return
+		default:
+			_, err := natsStream.Subscribe("message", func(m *stan.Msg) {
+				var user models.User
 
-func Start(ctx context.Context, natsStream stan.Conn, worker worker) error {
-	_, err := natsStream.Subscribe("message", func(m *stan.Msg) {
-		var user models.User
+				err := json.Unmarshal(m.Data, &user)
+				if err != nil {
+					log.Println(fmt.Errorf("[worker] %w", err))
+					return
+				}
 
-		err := json.Unmarshal(m.Data, &user)
-		if err != nil {
-			log.Println(err)
+				err = w.repo.InsertData(ctx, m.Data, user.OrderUid)
+				if err != nil {
+					log.Println(fmt.Errorf("[worker] failed to write to the database, err: %w", err))
+					return
+				}
+
+				err = w.cashe.Write(ctx, m.Data, user.OrderUid)
+				if err != nil {
+					log.Println(fmt.Errorf("[worker] failed to write to the cashe, err: %w", err))
+					return
+				}
+			}, stan.StartWithLastReceived())
+			if err != nil {
+				log.Println(fmt.Errorf("[worker] subscription error: %w", err))
+				return
+			}
 		}
-
-		err = worker.Write(m.Data, user.OrderUid)
-		if err != nil {
-			log.Println(err)
-		}
-
-		err = worker.InsertData(ctx, m.Data, user.OrderUid)
-		if err != nil {
-			log.Println(fmt.Errorf("[create] failed to write to the database, err: %w", err))
-		}
-	}, stan.StartWithLastReceived())
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	return nil
+		wg.Done()
+	}()
+	wg.Wait()
 }

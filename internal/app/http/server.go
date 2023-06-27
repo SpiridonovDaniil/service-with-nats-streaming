@@ -1,12 +1,13 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/gofiber/fiber/v2"
 )
 
 type service interface {
-	Get(id string) (json.RawMessage, error)
+	Get(ctx context.Context, id string) (json.RawMessage, error)
 }
 
 func NewServer(service service) *fiber.App {

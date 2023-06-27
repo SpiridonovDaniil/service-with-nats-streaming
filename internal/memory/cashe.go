@@ -9,8 +9,8 @@ import (
 )
 
 type Memory interface {
-	Write(data json.RawMessage, id string) error
-	Read(id string) (json.RawMessage, error)
+	Write(_ context.Context, data json.RawMessage, id string) error
+	Read(_ context.Context, id string) (json.RawMessage, error)
 }
 
 type Cashe struct {
@@ -30,7 +30,7 @@ func New(ctx context.Context, repo repository.Repository) (*Cashe, error) {
 	return &cashe, nil
 }
 
-func (c *Cashe) Write(data json.RawMessage, id string) error {
+func (c *Cashe) Write(_ context.Context, data json.RawMessage, id string) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if _, ok := c.data[id]; !ok {
@@ -43,7 +43,7 @@ func (c *Cashe) Write(data json.RawMessage, id string) error {
 	return nil
 }
 
-func (c *Cashe) Read(id string) (json.RawMessage, error) {
+func (c *Cashe) Read(_ context.Context, id string) (json.RawMessage, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if data, ok := c.data[id]; !ok {

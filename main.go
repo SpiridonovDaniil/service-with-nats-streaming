@@ -17,13 +17,14 @@ func main() {
 
 	ctx := context.Background()
 
-	natsStream, err := stan.Connect("test-cluster", "Daniil-sub", stan.NatsURL("nats://nats:4222"))
+	natsStream, err := stan.Connect(cfg.Nats.Cluster, cfg.Nats.Client, stan.NatsURL(cfg.Nats.Url))
 	if err != nil {
 		panic(err)
 	}
 	defer natsStream.Close()
 
 	db := postgres.New(cfg.Postgres)
+
 	cashe, err := memory.New(ctx, db)
 	if err != nil {
 		log.Println("Data could not be recovered, error:", err)
@@ -32,12 +33,7 @@ func main() {
 	service := service.New(db, cashe)
 	worker := subscription.New(cashe, db)
 
-	go func() {
-		err = subscription.Start(ctx, natsStream, worker)
-		if err != nil {
-			log.Println("[worker]", err)
-		}
-	}()
+	worker.Start(ctx, natsStream)
 
 	r := router.NewServer(service)
 	err = r.Listen(":" + cfg.Service.Port)

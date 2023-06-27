@@ -35,7 +35,7 @@ func (d *Db) InsertData(ctx context.Context, data json.RawMessage, id string) er
 	query := `INSERT INTO l0 (id, data) VALUES ($1, $2)`
 	_, err := d.db.ExecContext(ctx, query, id, data)
 	if err != nil {
-		return err
+		return fmt.Errorf("[insertData] %w", err)
 	}
 
 	return nil

@@ -9,7 +9,7 @@ import (
 type Config struct {
 	Postgres Postgres
 	Service  Service
-	Auth     Auth
+	Nats     Nats
 }
 
 type Postgres struct {
@@ -24,8 +24,10 @@ type Service struct {
 	Port string `envconfig:"SERVICE_PORT"`
 }
 
-type Auth struct {
-	Auth string `envconfig:"AUTH"`
+type Nats struct {
+	Url     string `envconfig:"NATS_URL"`
+	Cluster string `envconfig:"NATS_CLUSTER"`
+	Client  string `envconfig:"NATS_CLIENT"`
 }
 
 func Read() *Config {

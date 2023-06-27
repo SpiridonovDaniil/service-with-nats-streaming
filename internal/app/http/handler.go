@@ -14,7 +14,7 @@ func getHandler(service service) func(ctx *fiber.Ctx) error {
 			return fmt.Errorf("[getHandler] search parameters are not specified")
 		}
 
-		resp, err := service.Get(id)
+		resp, err := service.Get(ctx.Context(), id)
 		if err != nil {
 			ctx.Status(http.StatusInternalServerError)
 			return fmt.Errorf("[getHandler] %w", err)
