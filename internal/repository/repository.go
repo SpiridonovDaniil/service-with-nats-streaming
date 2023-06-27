@@ -6,6 +6,6 @@ import (
 )
 
 type Repository interface {
-	Create(ctx context.Context, data json.RawMessage, id string) error
+	InsertData(ctx context.Context, data json.RawMessage, id string) error
 	GetAll(ctx context.Context) (map[string]json.RawMessage, error)
 }

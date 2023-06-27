@@ -24,17 +24,16 @@ func main() {
 	defer natsStream.Close()
 
 	db := postgres.New(cfg.Postgres)
-	recovery := memory.Recovery(db)
-	cashe, err := memory.New(ctx, recovery)
+	cashe, err := memory.New(ctx, db)
 	if err != nil {
 		log.Println("Data could not be recovered, error:", err)
 	}
-	// TODO проверить правильно ли я решил головоломку с ссылками на cashe
-	service := service.New(db, cashe)
 
-	//c := memory.NewMemory(cashe)
+	service := service.New(db, cashe)
+	worker := subscription.New(cashe, db)
+
 	go func() {
-		err = subscription.Worker(ctx, natsStream, cashe, service)
+		err = subscription.Start(ctx, natsStream, worker)
 		if err != nil {
 			log.Println("[worker]", err)
 		}

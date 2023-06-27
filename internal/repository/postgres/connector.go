@@ -31,7 +31,7 @@ func New(cfg config.Postgres) *Db {
 	return &Db{db: conn}
 }
 
-func (d *Db) Create(ctx context.Context, data json.RawMessage, id string) error {
+func (d *Db) InsertData(ctx context.Context, data json.RawMessage, id string) error {
 	query := `INSERT INTO l0 (id, data) VALUES ($1, $2)`
 	_, err := d.db.ExecContext(ctx, query, id, data)
 	if err != nil {

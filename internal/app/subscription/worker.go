@@ -7,16 +7,29 @@ import (
 	"github.com/nats-io/stan.go"
 	"l0/internal/memory"
 	"l0/internal/models"
+	"l0/internal/repository"
 	"log"
 )
 
-//go:generate mockgen -source=worker.go -destination=mocks/mock.go
-
-type service interface {
-	Create(ctx context.Context, data json.RawMessage, id string) error
+type Worker struct {
+	cashe memory.Memory
+	repo  repository.Repository
 }
 
-func Worker(ctx context.Context, natsStream stan.Conn, cashe *memory.Cashe, service service) error {
+func New(cashe memory.Memory, repo repository.Repository) *Worker {
+	return &Worker{
+		cashe: cashe,
+		repo:  repo,
+	}
+}
+
+type worker interface {
+	Write(data json.RawMessage, id string) error
+	Read(id string) (json.RawMessage, error)
+	InsertData(ctx context.Context, data json.RawMessage, id string) error
+}
+
+func Start(ctx context.Context, natsStream stan.Conn, worker worker) error {
 	_, err := natsStream.Subscribe("message", func(m *stan.Msg) {
 		var user models.User
 
@@ -25,14 +38,14 @@ func Worker(ctx context.Context, natsStream stan.Conn, cashe *memory.Cashe, serv
 			log.Println(err)
 		}
 
-		err = cashe.Write(m.Data, user.OrderUid)
+		err = worker.Write(m.Data, user.OrderUid)
 		if err != nil {
 			log.Println(err)
 		}
 
-		err = service.Create(ctx, m.Data, user.OrderUid)
+		err = worker.InsertData(ctx, m.Data, user.OrderUid)
 		if err != nil {
-			log.Println(err)
+			log.Println(fmt.Errorf("[create] failed to write to the database, err: %w", err))
 		}
 	}, stan.StartWithLastReceived())
 	if err != nil {
@@ -41,5 +54,3 @@ func Worker(ctx context.Context, natsStream stan.Conn, cashe *memory.Cashe, serv
 
 	return nil
 }
-
-//TODO вернуть наверх ошибки

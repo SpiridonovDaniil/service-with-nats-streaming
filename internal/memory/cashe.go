@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"l0/internal/repository"
 	"sync"
 )
@@ -14,50 +13,28 @@ type Memory interface {
 	Read(id string) (json.RawMessage, error)
 }
 
-type CashRecovery struct {
-	repo repository.Repository
-}
-
-func Recovery(repo repository.Repository) *CashRecovery {
-	return &CashRecovery{
-		repo: repo,
-	}
-}
-
-//type C struct {
-//	Memory Memory
-//}
-//
-//func NewMemory(cashe Memory) *C {
-//	return &C{
-//		Memory: cashe,
-//	}
-//}
-
-//TODO как то некрасиво получилось в воркер загнать интерфейс
-
 type Cashe struct {
-	Data  map[string]json.RawMessage
-	Mutex sync.Mutex
+	data  map[string]json.RawMessage
+	mutex sync.Mutex
 }
 
-func New(ctx context.Context, recovery *CashRecovery) (*Cashe, error) {
+func New(ctx context.Context, repo repository.Repository) (*Cashe, error) {
 	var cashe Cashe
-	err := fmt.Errorf("")
-	// TODO как убрать это страшное? и давай проверим указатели еще раз)))
-	cashe.Data, err = recovery.repo.GetAll(ctx)
+	var err error
+
+	cashe.data, err = repo.GetAll(ctx)
 	if err != nil {
-		return &cashe, err
+		return nil, err
 	}
 
 	return &cashe, nil
 }
 
 func (c *Cashe) Write(data json.RawMessage, id string) error {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	if _, ok := c.Data[id]; !ok {
-		c.Data[id] = data
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	if _, ok := c.data[id]; !ok {
+		c.data[id] = data
 	} else {
 		err := errors.New("the user already exists in the database")
 		return err
@@ -67,9 +44,9 @@ func (c *Cashe) Write(data json.RawMessage, id string) error {
 }
 
 func (c *Cashe) Read(id string) (json.RawMessage, error) {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	if data, ok := c.Data[id]; !ok {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	if data, ok := c.data[id]; !ok {
 		err := errors.New("user not found")
 		return json.RawMessage{}, err
 	} else {
