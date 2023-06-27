@@ -15,6 +15,8 @@ services:
       interval: 5s
       timeout: 2s
       retries: 5
+    volumes:
+      - /l0/lib/postgre:/var/lib/postgresql/data
 
   migrator:
     build:
@@ -25,10 +27,10 @@ services:
         condition: service_healthy
 
   nats:
-    image: nats-streaming
+    image: nats-streaming:0.24-alpine3.15
     restart: always
     ports:
-      - '4222:4222'
+      - '127.0.0.1:4222:4222'
 
 
   app:

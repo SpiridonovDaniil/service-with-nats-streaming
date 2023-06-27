@@ -17,7 +17,7 @@ func main() {
 
 	ctx := context.Background()
 
-	natsStream, err := stan.Connect("spiridonov", "daniil", stan.NatsURL("nats://localhost:4222"))
+	natsStream, err := stan.Connect("spiridonov", "daniil", stan.NatsURL("nats//localhost:4222"))
 	if err != nil {
 		panic(err)
 	}
@@ -33,10 +33,12 @@ func main() {
 	service := service.New(db, cashe)
 
 	//c := memory.NewMemory(cashe)
-	err = subscription.Worker(ctx, natsStream, cashe, service)
-	if err != nil {
-		log.Println("[worker]", err)
-	}
+	go func() {
+		err = subscription.Worker(ctx, natsStream, cashe, service)
+		if err != nil {
+			log.Println("[worker]", err)
+		}
+	}()
 
 	r := router.NewServer(service)
 	err = r.Listen(":" + cfg.Service.Port)

@@ -1,19 +1,22 @@
 package main
 
 import (
+	"fmt"
 	"github.com/nats-io/stan.go"
 	"log"
 	"os"
 )
 
 func main() {
-	st, err := stan.Connect("spiridonov", "daniil", stan.NatsURL("nats://localhost:4222"))
+	st, err := stan.Connect("spiridonov", "daniil", stan.NatsURL("nats//localhost:4222"))
 	if err != nil {
 		log.Println(err)
 	}
 
 	for {
-		data, err := os.ReadFile("model.json")
+		var name string
+		_, err := fmt.Scan(&name)
+		data, err := os.ReadFile(name)
 		if err != nil {
 			log.Println(err)
 		}
