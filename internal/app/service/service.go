@@ -32,7 +32,7 @@ func (s *Service) Get(id string) (json.RawMessage, error) {
 func (s *Service) Create(ctx context.Context, data json.RawMessage, id string) error {
 	err := s.repo.Create(ctx, data, id)
 	if err != nil {
-		return fmt.Errorf("[post] failed to write to the database, err: %w", err)
+		return fmt.Errorf("[create] failed to write to the database, err: %w", err)
 	}
 
 	return nil

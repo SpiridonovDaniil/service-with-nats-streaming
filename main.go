@@ -17,7 +17,7 @@ func main() {
 
 	ctx := context.Background()
 
-	natsStream, err := stan.Connect("spiridonov", "daniil", stan.NatsURL("nats//localhost:4222"))
+	natsStream, err := stan.Connect("test-cluster", "Daniil-sub", stan.NatsURL("nats://nats:4222"))
 	if err != nil {
 		panic(err)
 	}

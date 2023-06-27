@@ -8,14 +8,14 @@ import (
 )
 
 func main() {
-	st, err := stan.Connect("spiridonov", "daniil", stan.NatsURL("nats//localhost:4222"))
+	st, err := stan.Connect("test-cluster", "Daniil-pub", stan.NatsURL("http://localhost:4222"))
 	if err != nil {
 		log.Println(err)
 	}
 
 	for {
 		var name string
-		_, err := fmt.Scan(&name)
+		_, err := fmt.Scanln(&name)
 		data, err := os.ReadFile(name)
 		if err != nil {
 			log.Println(err)
