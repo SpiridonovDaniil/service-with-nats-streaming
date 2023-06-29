@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/nats-io/stan.go"
+	"log"
+	"sync"
+
 	"l0/internal/memory"
 	"l0/internal/models"
 	"l0/internal/repository"
-	"log"
-	"sync"
+
+	"github.com/nats-io/stan.go"
 )
 
 type Worker struct {
@@ -28,10 +30,8 @@ func (w *Worker) Start(ctx context.Context, natsStream stan.Conn) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		select {
-		case <-ctx.Done():
-			log.Println(ctx.Err())
-			return
 		default:
 			_, err := natsStream.Subscribe("message", func(m *stan.Msg) {
 				var user models.User
@@ -58,8 +58,10 @@ func (w *Worker) Start(ctx context.Context, natsStream stan.Conn) {
 				log.Println(fmt.Errorf("[worker] subscription error: %w", err))
 				return
 			}
+		case <-ctx.Done():
+			log.Println(ctx.Err())
+			return
 		}
-		wg.Done()
 	}()
 	wg.Wait()
 }

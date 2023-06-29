@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/nats-io/stan.go"
 	"log"
 	"os"
+
+	"github.com/nats-io/stan.go"
 )
 
 func main() {

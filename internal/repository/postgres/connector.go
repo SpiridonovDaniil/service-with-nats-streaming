@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"l0/internal/config"
 	"log"
+
+	"l0/internal/config"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"

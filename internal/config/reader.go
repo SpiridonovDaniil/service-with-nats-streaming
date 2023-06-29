@@ -1,9 +1,10 @@
 package config
 
 import (
+	"log"
+
 	dotenv "github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
-	"log"
 )
 
 type Config struct {

@@ -1,9 +1,13 @@
 package http
 
 import (
+	"errors"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
 	"net/http"
+
+	"l0/internal/models"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func getHandler(service service) func(ctx *fiber.Ctx) error {
@@ -15,7 +19,10 @@ func getHandler(service service) func(ctx *fiber.Ctx) error {
 		}
 
 		resp, err := service.Get(ctx.Context(), id)
-		if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			ctx.Status(http.StatusNotFound)
+			return fmt.Errorf("[getHandler] %w", err)
+		} else if err != nil {
 			ctx.Status(http.StatusInternalServerError)
 			return fmt.Errorf("[getHandler] %w", err)
 		}

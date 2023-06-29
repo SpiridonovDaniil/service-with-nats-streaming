@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/nats-io/stan.go"
+	"io"
 	router "l0/internal/app/http"
 	"l0/internal/app/service"
 	"l0/internal/app/subscription"
@@ -18,14 +19,15 @@ func main() {
 	ctx := context.Background()
 
 	natsStream, err := stan.Connect(cfg.Nats.Cluster, cfg.Nats.Client, stan.NatsURL(cfg.Nats.Url))
-	if err != nil {
+	if err != nil && err != io.EOF {
 		panic(err)
 	}
 	defer natsStream.Close()
 
 	db := postgres.New(cfg.Postgres)
 
-	cashe, err := memory.New(ctx, db)
+	cashe := memory.New()
+	cashe, err = cashe.Recover(ctx, db, cashe)
 	if err != nil {
 		log.Println("Data could not be recovered, error:", err)
 	}

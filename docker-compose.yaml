@@ -16,7 +16,7 @@ services:
       timeout: 2s
       retries: 5
     volumes:
-      - /l0/lib/postgre:/var/lib/postgresql/data
+      - /l0/lib/postgre_volume/volumes:/var/lib/postgresql/data
 
   migrator:
     build:
